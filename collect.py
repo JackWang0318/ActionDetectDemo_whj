@@ -6,7 +6,7 @@ import time
 import mediapipe as mp
 from demo import *
 # Path for exported data, numpy arrays
-DATA_PATH = os.path.join('C:\\Users\\14471\\Desktop\\ActionDetectionDemo\\MP_Data') 
+DATA_PATH = os.path.join('MP_Data') 
 
 # Actions that we try to detect
 actions = np.array(['hello', 'thanks', 'iloveyou'])

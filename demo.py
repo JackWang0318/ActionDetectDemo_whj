@@ -14,8 +14,8 @@ from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.callbacks import TensorBoard
 from sklearn.metrics import multilabel_confusion_matrix, accuracy_score
 # Path for exported data, numpy arrays
-DATA_PATH = os.path.join('C:\\Users\\14471\\Desktop\\ActionDetectionDemo\\MP_Data') 
-log_dir = os.path.join('C:\\Users\\14471\\Desktop\\ActionDetectionDemo\\weight')
+DATA_PATH = os.path.join('MP_Data') 
+log_dir = os.path.join('weight')
 # Actions that we try to detect
 actions = np.array(['hello', 'thanks', 'iloveyou'])
 

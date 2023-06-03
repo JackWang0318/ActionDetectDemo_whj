@@ -1,0 +1,5 @@
+tensorflow==2.5.0 -i https://pypi.douban.com/simple/
+uvicorn
+--no-cache fastapi
+opencv-python
+python-multipart
