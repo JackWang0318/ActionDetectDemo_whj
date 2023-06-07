@@ -1,4 +1,4 @@
-tensorflow==2.5.0 -i https://pypi.douban.com/simple/
+tensorflow==2.8.0 
 opencv-python
 mediapipe 
 sklearn
