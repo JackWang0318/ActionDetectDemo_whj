@@ -77,7 +77,6 @@ def extract_keypoints(results):
     rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
     return np.concatenate([pose, face, lh, rh])
 
-colors = [(245,117,16), (117,245,16), (16,117,245)]
 def prob_viz(res, actions, input_frame, colors):
     output_frame = input_frame.copy()
     for num, prob in enumerate(res):
@@ -86,44 +85,46 @@ def prob_viz(res, actions, input_frame, colors):
         
     return output_frame
 
-#------------------Preprocess Data and Create Labels and Features---------------------
-label_map = {label:num for num, label in enumerate(actions)}
-sequences, labels = [], []
-for action in actions:
-    for sequence in np.array(os.listdir(os.path.join(DATA_PATH, action))).astype(int):
-        window = []
-        for frame_num in range(sequence_length):
-            res = np.load(os.path.join(DATA_PATH, action, str(sequence), "{}.npy".format(frame_num)))
-            window.append(res)
-        sequences.append(window)
-        labels.append(label_map[action])
+def preprocess_data_and_model() -> Sequential :
+    #------------------Preprocess Data and Create Labels and Features---------------------
+    label_map = {label:num for num, label in enumerate(actions)}
+    sequences, labels = [], []
+    for action in actions:
+        for sequence in np.array(os.listdir(os.path.join(DATA_PATH, action))).astype(int):
+            window = []
+            for frame_num in range(sequence_length):
+                res = np.load(os.path.join(DATA_PATH, action, str(sequence), "{}.npy".format(frame_num)))
+                window.append(res)
+            sequences.append(window)
+            labels.append(label_map[action])
 
-y = np.array(labels)
-label_encoder = LabelEncoder()
-y_integer = label_encoder.fit_transform(y)
-X = np.array(sequences)
-# one-hot coding
-onehot_encoder = OneHotEncoder(sparse=False)
-y = onehot_encoder.fit_transform(y_integer.reshape(-1, 1))
-#y = to_categorical(labels).astype(int)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05)
+    y = np.array(labels)
+    label_encoder = LabelEncoder()
+    y_integer = label_encoder.fit_transform(y)
+    X = np.array(sequences)
+    # one-hot coding
+    onehot_encoder = OneHotEncoder(sparse=False)
+    y = onehot_encoder.fit_transform(y_integer.reshape(-1, 1))
+    #y = to_categorical(labels).astype(int)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05)
 
-#---------------------Build and Train LSTM Neural Network---------------------
-tb_callback = TensorBoard(log_dir=log_dir)
+    #---------------------Build and Train LSTM Neural Network---------------------
+    tb_callback = TensorBoard(log_dir=log_dir)
 
-model = Sequential()
-model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(30,1662)))
-model.add(LSTM(128, return_sequences=True, activation='relu'))
-model.add(LSTM(64, return_sequences=False, activation='relu'))
-model.add(Dense(64, activation='relu'))
-model.add(Dense(32, activation='relu'))
-model.add(Dense(actions.shape[0], activation='softmax'))
+    model = Sequential()
+    model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(30,1662)))
+    model.add(LSTM(128, return_sequences=True, activation='relu'))
+    model.add(LSTM(64, return_sequences=False, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(actions.shape[0], activation='softmax'))
 
-model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+    model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
-#you can train this model,or use action_h5/action_pre.h5
-#model.fit(X_train, y_train, epochs=2000, callbacks=[tb_callback])
-model.summary()
+    #you can train this model,or use action_h5/action_pre.h5
+    #model.fit(X_train, y_train, epochs=2000, callbacks=[tb_callback])
+    model.summary()
+    return model
 
 #---------------------Make Prediction---------------------
 # res = model.predict(X_test)
@@ -133,6 +134,8 @@ model.summary()
 #---------------------Save Weight---------------------
 #model.save('action.h5')
 #del model
+
+model = preprocess_data_and_model()
 model.load_weights('action.h5')
 
 #------------------Evaluation using Confusion Matrix and Accuracy---------------------
